@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Text Stats</title>
+<style>
+  body { font: 16px/1.5 system-ui, sans-serif; max-width: 40rem; margin: 3rem auto; padding: 0 1rem; color: #1a1a1a; }
+  h1 { font-size: 1.5rem; margin-bottom: .25rem; }
+  .release { color: #555; margin-top: 0; }
+  label { display: block; font-weight: 600; margin-bottom: .25rem; }
+  textarea { width: 100%; box-sizing: border-box; min-height: 7rem; padding: .5rem; font: inherit; }
+  button { margin-top: .75rem; padding: .5rem 1rem; font: inherit; cursor: pointer; }
+  output { display: block; margin-top: 1rem; }
+  li { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<h1>Text Stats</h1>
+<p class="release">Release {{ release }}</p>
+<label for="text">Text</label>
+<textarea id="text"></textarea>
+<button id="analyse" type="button">Analyse</button>
+{% if top_words_enabled %}<button id="top" type="button">Top words</button>{% endif %}
+<output id="result" aria-live="polite"></output>
+<script>
+  const box = document.getElementById("text");
+  const result = document.getElementById("result");
+  const post = (url) => fetch(url, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({text: box.value}),
+  }).then((r) => r.json());
+  document.getElementById("analyse").onclick = async () => {
+    const s = await post("/stats");
+    result.textContent = `${s.words} words, ${s.unique_words} unique, ${s.characters} characters`;
+  };
+  const top = document.getElementById("top");
+  if (top) top.onclick = async () => {
+    const t = await post("/stats/top");
+    result.textContent = t.top_words.map((w) => `${w.word} (${w.count})`).join(", ");
+  };
+</script>
+</body>
+</html>
