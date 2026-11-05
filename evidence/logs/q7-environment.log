@@ -1,0 +1,29 @@
+$ cat /etc/os-release | head -1; uname -srm
+PRETTY_NAME="Ubuntu 24.04.5 LTS"
+Linux 7.2.12-orbstack-00394-gbecdd6130068 aarch64
+
+$ docker version --format 'Docker Engine {{.Server.Version}}'; docker compose version
+Docker Engine 29.9.3
+Docker Compose version v5.7.0
+
+$ ansible --version | head -1; terraform version | head -1; trivy --version | head -1
+ansible [core 2.16.3]
+Terraform v1.17.1
+Version: 0.76.2
+
+$ ~/lab-tools/bin/pip-audit --version; ~/lab-tools/bin/bandit --version | head -1; ab -V | head -1
+pip-audit 2.10.1
+bandit 1.9.4
+This is ApacheBench, Version 2.3 <$Revision: 1903618 $>
+
+$ docker exec lab3-pipeline-jenkins-1 cat /var/jenkins_home/war/META-INF/MANIFEST.MF | grep Jenkins-Version
+Jenkins-Version: 2.580.2
+
+$ docker images --format '{{.Repository}}:{{.Tag}}' | grep -E 'prometheus|grafana|elastic|selenium|jenkins' | sort
+docker.elastic.co/elasticsearch/elasticsearch:9.5.6
+lab3-pipeline-jenkins:latest
+mirror.gcr.io/grafana/grafana:13.3.0
+mirror.gcr.io/jenkins/jenkins:lts-jdk21
+mirror.gcr.io/selenium/standalone-chromium:latest
+quay.io/prometheus/prometheus:v3.16.0
+
