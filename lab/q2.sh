@@ -1,0 +1,18 @@
+cd "$(dirname "$0")/.."
+. lab/rec.sh evidence/logs/q2-terraform.log
+rec "docker build -q -t text-stats:3.0.0 ."
+cd infra
+rec "terraform version | head -1"
+rec "terraform init -no-color"
+rec "terraform fmt -check && terraform validate -no-color"
+rec "terraform plan -no-color -out=tfplan"
+rec "terraform apply -no-color -auto-approve tfplan"
+rec "docker ps --filter name=text-stats- --format '{{.Names}}  {{.Status}}  {{.Ports}}'"
+rec "curl -s http://localhost:8310/healthz"
+rec "terraform plan -no-color -var replicas=4 | tail -8"
+rec "terraform apply -no-color -auto-approve -var replicas=4 | tail -12"
+rec "docker ps --filter name=text-stats- --format '{{.Names}}  {{.Status}}  {{.Ports}}'"
+rec "curl -s http://localhost:8313/healthz"
+rec "terraform state list"
+rec "terraform apply -no-color -auto-approve -var replicas=2 | tail -8"
+rec "terraform plan -no-color -detailed-exitcode | tail -2; echo exit=\${PIPESTATUS[0]}"

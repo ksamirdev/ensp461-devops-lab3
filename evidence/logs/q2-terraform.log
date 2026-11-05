@@ -1,0 +1,258 @@
+$ docker build -q -t text-stats:3.0.0 .
+sha256:fbe39bb66ceb30544eb6a4945879e8ecccd5dbaa87fdfea837045868ddf756b2
+
+$ terraform version | head -1
+Terraform v1.17.1
+
+$ terraform init -no-color
+Initializing the backend...
+
+Initializing provider plugins...
+- Reusing version 3.9.0 of kreuzwerker/docker from the dependency lock file
+- Using previously-installed kreuzwerker/docker v3.9.0
+
+Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.
+
+$ terraform fmt -check && terraform validate -no-color
+Success! The configuration is valid.
+
+
+$ terraform plan -no-color -out=tfplan
+data.docker_image.text_stats: Reading...
+data.docker_image.text_stats: Read complete after 0s [id=sha256:fbe39bb66ceb30544eb6a4945879e8ecccd5dbaa87fdfea837045868ddf756b2]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # docker_container.text_stats[0] will be created
+  + resource "docker_container" "text_stats" {
+      + attach                                      = false
+      + bridge                                      = (known after apply)
+      + command                                     = (known after apply)
+      + container_logs                              = (known after apply)
+      + container_read_refresh_timeout_milliseconds = 15000
+      + entrypoint                                  = (known after apply)
+      + env                                         = [
+          + "RELEASE=3.0.0",
+        ]
+      + exit_code                                   = (known after apply)
+      + hostname                                    = (known after apply)
+      + id                                          = (known after apply)
+      + image                                       = "sha256:fbe39bb66ceb30544eb6a4945879e8ecccd5dbaa87fdfea837045868ddf756b2"
+      + init                                        = (known after apply)
+      + ipc_mode                                    = (known after apply)
+      + log_driver                                  = (known after apply)
+      + logs                                        = false
+      + memory_reservation                          = 0
+      + must_run                                    = true
+      + name                                        = "text-stats-1"
+      + network_data                                = (known after apply)
+      + network_mode                                = "bridge"
+      + read_only                                   = false
+      + remove_volumes                              = true
+      + restart                                     = "unless-stopped"
+      + rm                                          = false
+      + runtime                                     = (known after apply)
+      + security_opts                               = (known after apply)
+      + shm_size                                    = (known after apply)
+      + start                                       = true
+      + stdin_open                                  = false
+      + stop_signal                                 = (known after apply)
+      + stop_timeout                                = (known after apply)
+      + tty                                         = false
+      + wait                                        = false
+      + wait_timeout                                = 60
+
+      + healthcheck (known after apply)
+
+      + labels (known after apply)
+
+      + networks_advanced {
+          + aliases      = []
+          + name         = "lab3-tf"
+            # (3 unchanged attributes hidden)
+        }
+
+      + ports {
+          + external = 8310
+          + internal = 5000
+          + ip       = "127.0.0.1"
+          + protocol = "tcp"
+        }
+    }
+
+  # docker_container.text_stats[1] will be created
+  + resource "docker_container" "text_stats" {
+      + attach                                      = false
+      + bridge                                      = (known after apply)
+      + command                                     = (known after apply)
+      + container_logs                              = (known after apply)
+      + container_read_refresh_timeout_milliseconds = 15000
+      + entrypoint                                  = (known after apply)
+      + env                                         = [
+          + "RELEASE=3.0.0",
+        ]
+      + exit_code                                   = (known after apply)
+      + hostname                                    = (known after apply)
+      + id                                          = (known after apply)
+      + image                                       = "sha256:fbe39bb66ceb30544eb6a4945879e8ecccd5dbaa87fdfea837045868ddf756b2"
+      + init                                        = (known after apply)
+      + ipc_mode                                    = (known after apply)
+      + log_driver                                  = (known after apply)
+      + logs                                        = false
+      + memory_reservation                          = 0
+      + must_run                                    = true
+      + name                                        = "text-stats-2"
+      + network_data                                = (known after apply)
+      + network_mode                                = "bridge"
+      + read_only                                   = false
+      + remove_volumes                              = true
+      + restart                                     = "unless-stopped"
+      + rm                                          = false
+      + runtime                                     = (known after apply)
+      + security_opts                               = (known after apply)
+      + shm_size                                    = (known after apply)
+      + start                                       = true
+      + stdin_open                                  = false
+      + stop_signal                                 = (known after apply)
+      + stop_timeout                                = (known after apply)
+      + tty                                         = false
+      + wait                                        = false
+      + wait_timeout                                = 60
+
+      + healthcheck (known after apply)
+
+      + labels (known after apply)
+
+      + networks_advanced {
+          + aliases      = []
+          + name         = "lab3-tf"
+            # (3 unchanged attributes hidden)
+        }
+
+      + ports {
+          + external = 8311
+          + internal = 5000
+          + ip       = "127.0.0.1"
+          + protocol = "tcp"
+        }
+    }
+
+  # docker_network.lab will be created
+  + resource "docker_network" "lab" {
+      + driver      = (known after apply)
+      + id          = (known after apply)
+      + internal    = (known after apply)
+      + ipam_driver = "default"
+      + name        = "lab3-tf"
+      + options     = (known after apply)
+      + scope       = (known after apply)
+
+      + ipam_config (known after apply)
+    }
+
+Plan: 3 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + urls = [
+      + "http://localhost:8310",
+      + "http://localhost:8311",
+    ]
+
+─────────────────────────────────────────────────────────────────────────────
+
+Saved the plan to: tfplan
+
+To perform exactly these actions, run the following command to apply:
+    terraform apply "tfplan"
+
+$ terraform apply -no-color -auto-approve tfplan
+docker_network.lab: Creating...
+docker_network.lab: Creation complete after 2s [id=cb86be6d276272e3d6d0ec5af1e1dfd5fca22660fc157402f11606c0e633011b]
+docker_container.text_stats[1]: Creating...
+docker_container.text_stats[0]: Creating...
+docker_container.text_stats[0]: Creation complete after 1s [id=e0cd1b94e16265c8f3be575e15c57eb66bd40f0fc8f23f768ebfca0b7f2fb151]
+docker_container.text_stats[1]: Creation complete after 1s [id=96adde36ef248a90ed11e1bbc3e34bd993ae7caa64d019c9a7bdd5f51dda983d]
+
+Apply complete! Resources: 3 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+urls = [
+  "http://localhost:8310",
+  "http://localhost:8311",
+]
+
+$ docker ps --filter name=text-stats- --format '{{.Names}}  {{.Status}}  {{.Ports}}'
+text-stats-1  Up Less than a second (health: starting)  127.0.0.1:8310->5000/tcp
+text-stats-2  Up Less than a second (health: starting)  127.0.0.1:8311->5000/tcp
+
+$ curl -s http://localhost:8310/healthz
+
+$ terraform plan -no-color -var replicas=4 | tail -8
+      + "http://localhost:8312",
+      + "http://localhost:8313",
+    ]
+
+─────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't
+guarantee to take exactly these actions if you run "terraform apply" now.
+
+$ terraform apply -no-color -auto-approve -var replicas=4 | tail -12
+docker_container.text_stats[2]: Creation complete after 1s [id=410150966bf5f01ae75cf5ba273ca2a4155dc45484390ee87ca29f80f3623e75]
+
+Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+urls = [
+  "http://localhost:8310",
+  "http://localhost:8311",
+  "http://localhost:8312",
+  "http://localhost:8313",
+]
+
+$ docker ps --filter name=text-stats- --format '{{.Names}}  {{.Status}}  {{.Ports}}'
+text-stats-3  Up Less than a second (health: starting)  127.0.0.1:8312->5000/tcp
+text-stats-4  Up Less than a second (health: starting)  127.0.0.1:8313->5000/tcp
+text-stats-1  Up 5 seconds (health: starting)  127.0.0.1:8310->5000/tcp
+text-stats-2  Up 5 seconds (health: starting)  127.0.0.1:8311->5000/tcp
+
+$ curl -s http://localhost:8313/healthz
+{"healthy":true,"release":"3.0.0"}
+
+$ terraform state list
+data.docker_image.text_stats
+docker_container.text_stats[0]
+docker_container.text_stats[1]
+docker_container.text_stats[2]
+docker_container.text_stats[3]
+docker_network.lab
+
+$ terraform apply -no-color -auto-approve -var replicas=2 | tail -8
+Apply complete! Resources: 0 added, 0 changed, 2 destroyed.
+
+Outputs:
+
+urls = [
+  "http://localhost:8310",
+  "http://localhost:8311",
+]
+
+$ terraform plan -no-color -detailed-exitcode | tail -2; echo exit=${PIPESTATUS[0]}
+Terraform has compared your real infrastructure against your configuration
+and found no differences, so no changes are needed.
+exit=0
+

@@ -3,3 +3,7 @@ __pycache__/
 .git/
 evidence/
 reports/
+infra/
+observability/
+automation/
+lab/
