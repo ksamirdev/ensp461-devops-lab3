@@ -1,7 +1,8 @@
 FROM mirror.gcr.io/library/python:3.13-slim
 WORKDIR /srv/text-stats
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# pip is only needed at build time; removing it drops its vendored urllib3/msgpack copies from the image
+RUN pip install --no-cache-dir -r requirements.txt && pip uninstall -y pip
 COPY service service
 RUN useradd --system textstats && mkdir /var/log/text-stats && chown textstats /var/log/text-stats
 USER textstats
