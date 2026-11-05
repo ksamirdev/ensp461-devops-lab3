@@ -1,0 +1,92 @@
+---
+# Configures every web node: the app runs as a systemd service behind nginx.
+- name: Deploy text-stats on web nodes
+  hosts: webnodes
+  gather_facts: false
+  vars:
+    app_dir: /opt/text-stats
+    app_release: "3.0.0"
+  pre_tasks:
+    - name: Bootstrap python so Ansible modules can run
+      ansible.builtin.raw: command -v python3 || (apt-get update -qq && apt-get install -y -qq python3)
+      register: bootstrap
+      changed_when: "'/usr/bin/python3' not in bootstrap.stdout"
+  tasks:
+    - name: Install packages
+      ansible.builtin.apt:
+        name: [python3-venv, python3-packaging, python3-setuptools, nginx]
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Create service account
+      ansible.builtin.user:
+        name: textstats
+        system: true
+        create_home: false
+
+    - name: Copy application code
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../service"
+        dest: "{{ app_dir }}/"
+        owner: root
+        mode: preserve
+      notify: Restart app
+
+    - name: Copy pinned requirements
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../requirements.txt"
+        dest: "{{ app_dir }}/requirements.txt"
+        mode: "0644"
+
+    - name: Install dependencies into a virtualenv
+      ansible.builtin.pip:
+        requirements: "{{ app_dir }}/requirements.txt"
+        virtualenv: "{{ app_dir }}/.venv"
+        virtualenv_command: python3 -m venv
+      notify: Restart app
+
+    - name: Install systemd unit
+      ansible.builtin.template:
+        src: text-stats.service.j2
+        dest: /etc/systemd/system/text-stats.service
+        mode: "0644"
+      notify: Restart app
+
+    - name: Configure nginx reverse proxy
+      ansible.builtin.template:
+        src: nginx-site.conf.j2
+        dest: /etc/nginx/sites-available/default
+        mode: "0644"
+      notify: Reload nginx
+
+    - name: Enable and start services
+      ansible.builtin.systemd_service:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+        daemon_reload: true
+      loop: [text-stats, nginx]
+  handlers:
+    - name: Restart app
+      ansible.builtin.systemd_service:
+        name: text-stats
+        state: restarted
+        daemon_reload: true
+    - name: Reload nginx
+      ansible.builtin.systemd_service:
+        name: nginx
+        state: reloaded
+  post_tasks:
+    - name: Flush handlers before verifying
+      ansible.builtin.meta: flush_handlers
+    - name: Verify the app answers through nginx
+      ansible.builtin.uri:
+        url: http://localhost/healthz
+        return_content: true
+      register: health
+      retries: 5
+      delay: 2
+      until: health.status == 200
+    - name: Show health
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }}: {{ health.json }}"

@@ -1,0 +1,114 @@
+$ ansible --version | head -1
+ansible [core 2.16.3]
+
+$ docker ps --filter name=web-node --format '{{.Names}}  {{.Image}}  {{.Status}}  {{.Ports}}'
+web-node-2  ensp461-lab3-node  Up 6 seconds  127.0.0.1:8302->80/tcp
+web-node-1  ensp461-lab3-node  Up 6 seconds  127.0.0.1:8301->80/tcp
+
+$ cat automation/inventory.ini
+[webnodes]
+web-node-1 ansible_connection=community.docker.docker
+web-node-2 ansible_connection=community.docker.docker
+
+[webnodes:vars]
+ansible_python_interpreter=/usr/bin/python3
+
+$ ansible -i automation/inventory.ini webnodes -m raw -a 'cat /etc/os-release | head -1'
+web-node-1 | CHANGED | rc=0 >>
+PRETTY_NAME="Ubuntu 24.04.5 LTS"
+
+web-node-2 | CHANGED | rc=0 >>
+PRETTY_NAME="Ubuntu 24.04.5 LTS"
+
+
+$ ANSIBLE_DEPRECATION_WARNINGS=false ANSIBLE_FORCE_COLOR=0 ansible-playbook -i automation/inventory.ini automation/site.yml
+
+PLAY [Deploy text-stats on web nodes] ******************************************
+
+TASK [Bootstrap python so Ansible modules can run] *****************************
+ok: [web-node-1]
+ok: [web-node-2]
+
+TASK [Install packages] ********************************************************
+changed: [web-node-2]
+changed: [web-node-1]
+
+TASK [Create service account] **************************************************
+changed: [web-node-2]
+changed: [web-node-1]
+
+TASK [Copy application code] ***************************************************
+changed: [web-node-2]
+changed: [web-node-1]
+
+TASK [Copy pinned requirements] ************************************************
+changed: [web-node-1]
+changed: [web-node-2]
+
+TASK [Install dependencies into a virtualenv] **********************************
+changed: [web-node-1]
+changed: [web-node-2]
+
+TASK [Install systemd unit] ****************************************************
+changed: [web-node-2]
+changed: [web-node-1]
+
+TASK [Configure nginx reverse proxy] *******************************************
+changed: [web-node-1]
+changed: [web-node-2]
+
+TASK [Enable and start services] ***********************************************
+changed: [web-node-2] => (item=text-stats)
+changed: [web-node-1] => (item=text-stats)
+changed: [web-node-2] => (item=nginx)
+changed: [web-node-1] => (item=nginx)
+
+RUNNING HANDLER [Restart app] **************************************************
+changed: [web-node-2]
+changed: [web-node-1]
+
+RUNNING HANDLER [Reload nginx] *************************************************
+changed: [web-node-2]
+changed: [web-node-1]
+
+TASK [Flush handlers before verifying] *****************************************
+
+TASK [Flush handlers before verifying] *****************************************
+
+TASK [Verify the app answers through nginx] ************************************
+ok: [web-node-1]
+ok: [web-node-2]
+
+TASK [Show health] *************************************************************
+ok: [web-node-1] => {
+    "msg": "web-node-1: {'healthy': True, 'release': '3.0.0'}"
+}
+ok: [web-node-2] => {
+    "msg": "web-node-2: {'healthy': True, 'release': '3.0.0'}"
+}
+
+PLAY RECAP *********************************************************************
+web-node-1                 : ok=13   changed=10   unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+web-node-2                 : ok=13   changed=10   unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+
+$ ANSIBLE_FORCE_COLOR=0 ansible-playbook -i automation/inventory.ini automation/site.yml | tail -4
+PLAY RECAP *********************************************************************
+web-node-1                 : ok=11   changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+web-node-2                 : ok=11   changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+
+$ ansible -i automation/inventory.ini webnodes -m command -a 'systemctl is-active text-stats nginx'
+web-node-2 | CHANGED | rc=0 >>
+active
+active
+web-node-1 | CHANGED | rc=0 >>
+active
+active
+
+$ curl -s http://host.docker.internal:8301/healthz
+{"healthy":true,"release":"3.0.0"}
+
+$ curl -s http://host.docker.internal:8302/stats -H 'Content-Type: application/json' -d '{"text": "configured by ansible configured twice"}'
+{"characters":38,"unique_words":4,"words":5}
+

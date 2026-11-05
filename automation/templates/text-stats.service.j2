@@ -1,0 +1,13 @@
+[Unit]
+Description=Text statistics service
+After=network.target
+
+[Service]
+User=textstats
+WorkingDirectory={{ app_dir }}
+Environment=RELEASE={{ app_release }}
+ExecStart={{ app_dir }}/.venv/bin/gunicorn --bind 127.0.0.1:5000 --workers 1 --threads 8 service.web:app
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
