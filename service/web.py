@@ -16,7 +16,12 @@ app = Flask(__name__)
 REQUESTS = Counter(
     "textstats_http_requests_total", "HTTP requests served", ["method", "route", "status"]
 )
-LATENCY = Histogram("textstats_http_request_duration_seconds", "Request latency", ["route"])
+LATENCY = Histogram(
+    "textstats_http_request_duration_seconds",
+    "Request latency",
+    ["route"],
+    buckets=(0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1),
+)
 WORDS = Counter("textstats_words_processed_total", "Words analysed by /stats")
 
 log = logging.getLogger("textstats")

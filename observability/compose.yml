@@ -1,0 +1,63 @@
+# Monitoring and logging stack. Ports bind to localhost only: security is off for the lab.
+name: lab3-observability
+
+services:
+  app:
+    build: ..
+    environment:
+      LOG_FILE: /var/log/text-stats/app.log
+    ports: ["127.0.0.1:8300:5000"]
+    volumes: [app-logs:/var/log/text-stats]
+
+  prometheus:
+    image: quay.io/prometheus/prometheus:v3.16.0
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports: ["127.0.0.1:9390:9090"]
+
+  grafana:
+    image: mirror.gcr.io/grafana/grafana:13.3.0
+    depends_on: [prometheus]
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports: ["127.0.0.1:3390:3000"]
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.5.6
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms1g -Xmx1g
+    volumes: [es-data:/usr/share/elasticsearch/data]
+    ports: ["127.0.0.1:9290:9200"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      retries: 30
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:9.5.6
+    depends_on:
+      elasticsearch: {condition: service_healthy}
+    environment:
+      LS_JAVA_OPTS: -Xms512m -Xmx512m
+      xpack.monitoring.enabled: "false"
+    volumes:
+      - ./logstash/pipeline.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - app-logs:/var/log/text-stats:ro
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.5.6
+    depends_on:
+      elasticsearch: {condition: service_healthy}
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports: ["127.0.0.1:5690:5601"]
+
+volumes:
+  app-logs:
+  es-data:

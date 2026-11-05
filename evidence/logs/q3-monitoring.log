@@ -1,0 +1,58 @@
+$ cat observability/prometheus.yml
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: text-stats
+    static_configs:
+      - targets: ["app:5000"]
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+$ docker compose -f observability/compose.yml up -d --build app prometheus grafana 2>&1 | grep -E 'Started|Running|Healthy|Built'
+ Image lab3-observability-app Built 
+ Container lab3-observability-prometheus-1 Started 
+ Container lab3-observability-grafana-1 Started 
+ Container lab3-observability-app-1 Started 
+
+$ docker compose -f observability/compose.yml ps --format '{{.Service}}  {{.Image}}  {{.Status}}  {{.Ports}}'
+app  lab3-observability-app  Up 15 seconds (healthy)  127.0.0.1:8300->5000/tcp
+grafana  mirror.gcr.io/grafana/grafana:13.3.0  Up 15 seconds  127.0.0.1:3390->3000/tcp
+prometheus  quay.io/prometheus/prometheus:v3.16.0  Up 15 seconds  127.0.0.1:9390->9090/tcp
+
+$ curl -s http://localhost:8300/healthz
+{"healthy":true,"release":"3.0.0"}
+
+$ curl -s http://localhost:8300/metrics | grep -E '^textstats_(http_requests_total|words_processed_total)'
+textstats_http_requests_total{method="GET",route="/healthz",status="200"} 182.0
+textstats_http_requests_total{method="GET",route="/",status="200"} 174.0
+textstats_http_requests_total{method="GET",route="/ui",status="200"} 174.0
+textstats_http_requests_total{method="POST",route="/stats",status="200"} 174.0
+textstats_http_requests_total{method="POST",route="/stats",status="400"} 174.0
+textstats_http_requests_total{method="GET",route="unmatched",status="404"} 174.0
+textstats_words_processed_total 1392.0
+
+$ curl -s http://localhost:9390/api/v1/targets | jq -r '.data.activeTargets[] | "\(.labels.job) \(.scrapeUrl) \(.health)"'
+prometheus http://localhost:9090/metrics up
+text-stats http://app:5000/metrics up
+
+$ curl -s --get http://localhost:9390/api/v1/query --data-urlencode 'query=sum by (route) (rate(textstats_http_requests_total[1m]))' | jq -r '.data.result[] | "\(.metric.route) \(.value[1]) req/s"'
+/healthz 3.036363636363636 req/s
+/ 2.902852424242424 req/s
+/ui 2.902852424242424 req/s
+/stats 5.805704848484848 req/s
+unmatched 2.902852424242424 req/s
+
+$ curl -s http://localhost:3390/api/health | jq -c '{database,version}'
+{"database":"ok","version":"13.3.0"}
+
+$ curl -s http://localhost:3390/api/dashboards/uid/text-stats | jq -r '.dashboard.title, (.dashboard.panels[].title)'
+Text Stats Service
+Service up
+Requests per second
+Error ratio (4xx + 5xx)
+Words analysed
+Requests per second by route
+p95 latency by route
+
