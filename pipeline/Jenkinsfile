@@ -20,7 +20,7 @@ pipeline {
             steps { sh '.venv/bin/bandit -r service -q' }
         }
         stage('Secrets and misconfiguration') {
-            steps { sh 'trivy fs --scanners secret,misconfig --severity HIGH,CRITICAL --exit-code 1 --skip-dirs .venv .' }
+            steps { sh 'trivy fs --scanners secret,misconfig --severity HIGH,CRITICAL --ignorefile .trivyignore.yaml --exit-code 1 --skip-dirs .venv .' }
         }
         stage('Build image') {
             steps { sh 'docker build -t text-stats:ci-${BUILD_NUMBER} .' }

@@ -1,0 +1,10 @@
+# Accepted risks, scoped to lab infrastructure only. The application image (Dockerfile) gets no exceptions.
+misconfigurations:
+  - id: DS-0002
+    paths:
+      - lab/node.Dockerfile
+    statement: Ansible target node runs systemd as PID 1, which must be root. Lab-only, never deployed.
+  - id: DS-0002
+    paths:
+      - pipeline/Dockerfile
+    statement: Jenkins controller needs root to use the host Docker socket. Bound to 127.0.0.1 on the lab machine.
