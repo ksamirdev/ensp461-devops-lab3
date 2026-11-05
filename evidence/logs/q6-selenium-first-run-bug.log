@@ -1,0 +1,10 @@
+$ /home/samir/lab-tools/bin/python e2e/test_ui_selenium.py http://flag-on:5000 http://localhost:4444 evidence/screenshots
+PASS page title is 'Text Stats'
+Traceback (most recent call last):
+  File "/home/samir/ensp461-lab3/e2e/test_ui_selenium.py", line 27, in <module>
+    WebDriverWait(driver, 5).until(result_contains("5 words, 2 unique, 20 characters"))
+  File "/home/samir/lab-tools/lib/python3.12/site-packages/selenium/webdriver/support/wait.py", line 138, in until
+    raise TimeoutException(message, screen, stacktrace)
+selenium.common.exceptions.TimeoutException: Message: 
+
+

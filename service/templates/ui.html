@@ -35,8 +35,8 @@
     const s = await post("/stats");
     result.textContent = `${s.words} words, ${s.unique_words} unique, ${s.characters} characters`;
   };
-  const top = document.getElementById("top");
-  if (top) top.onclick = async () => {
+  const topButton = document.getElementById("top");
+  if (topButton) topButton.onclick = async () => {
     const t = await post("/stats/top");
     result.textContent = t.top_words.map((w) => `${w.word} (${w.count})`).join(", ");
   };

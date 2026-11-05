@@ -1,0 +1,75 @@
+$ /home/samir/lab-tools/bin/python -m pytest -v -p no:cacheprovider 2>&1 | tail -16
+configfile: pytest.ini
+testpaths: tests
+plugins: platformdirs-4.14.5
+collecting ... collected 9 items
+
+tests/test_web.py::test_healthz_reports_healthy PASSED                   [ 11%]
+tests/test_web.py::test_text_stats_counts_unique_words_case_insensitively PASSED [ 22%]
+tests/test_web.py::test_stats_endpoint_returns_counts PASSED             [ 33%]
+tests/test_web.py::test_stats_endpoint_rejects_invalid_text[body0] PASSED [ 44%]
+tests/test_web.py::test_stats_endpoint_rejects_invalid_text[body1] PASSED [ 55%]
+tests/test_web.py::test_metrics_exposes_request_counter PASSED           [ 66%]
+tests/test_web.py::test_unknown_urls_share_one_metric_label PASSED       [ 77%]
+tests/test_web.py::test_top_words_hidden_when_flag_off PASSED            [ 88%]
+tests/test_web.py::test_top_words_served_when_flag_on PASSED             [100%]
+
+============================== 9 passed in 0.10s ===============================
+
+$ docker build -q -t text-stats:3.0.0 .
+sha256:db1ece7c69650966b4fbf07de08dd75095f7136cd2129a3d611175998ffd57f7
+
+$ docker run -d --name flag-off --network lab3-e2e -p 127.0.0.1:8320:5000 -e FEATURE_TOP_WORDS=false text-stats:3.0.0
+206d98f9d9bef7e7488e17eb1e08d7ae478abf755772544fc3fda6ca2dc81486
+
+$ docker run -d --name flag-on --network lab3-e2e -p 127.0.0.1:8321:5000 -e FEATURE_TOP_WORDS=true text-stats:3.0.0
+2eb9933f1f55b805a4d1fcc8251aaab66a3bb62bff98b791fcc40837566b4c9c
+
+$ curl -s -w ' HTTP %{http_code}\n' -H 'Content-Type: application/json' -d '{"text":"a a b"}' http://localhost:8320/stats/top
+{"error":"feature 'top_words' is disabled"}
+ HTTP 404
+
+$ curl -s -w ' HTTP %{http_code}\n' -H 'Content-Type: application/json' -d '{"text":"a a b"}' http://localhost:8321/stats/top
+{"top_words":[{"count":2,"word":"a"},{"count":1,"word":"b"}]}
+ HTTP 200
+
+$ ab -q -n 5000 -c 50 http://localhost:8300/healthz | grep -E 'Concurrency|Complete requests|Failed|Requests per second|Time per request|99%|100%'
+Concurrency Level:      50
+Complete requests:      5000
+Failed requests:        0
+Requests per second:    4002.62 [#/sec] (mean)
+Time per request:       12.492 [ms] (mean)
+Time per request:       0.250 [ms] (mean, across all concurrent requests)
+  99%     23
+ 100%     26 (longest request)
+
+$ ab -q -n 5000 -c 50 -p /tmp/body.json -T application/json http://localhost:8300/stats | grep -E 'Concurrency|Complete requests|Failed|Non-2xx|Requests per second|Time per request|99%|100%'
+Concurrency Level:      50
+Complete requests:      5000
+Failed requests:        0
+Requests per second:    3574.92 [#/sec] (mean)
+Time per request:       13.986 [ms] (mean)
+Time per request:       0.280 [ms] (mean, across all concurrent requests)
+  99%     30
+ 100%     46 (longest request)
+
+$ ab -q -n 20000 -c 200 http://localhost:8300/healthz | grep -E 'Concurrency|Complete requests|Failed|Non-2xx|Requests per second|99%|100%'
+Concurrency Level:      200
+Complete requests:      20000
+Failed requests:        0
+Requests per second:    2995.98 [#/sec] (mean)
+  99%    110
+ 100%    125 (longest request)
+
+$ docker run -d --name selenium --network lab3-e2e --shm-size=1g -p 127.0.0.1:4444:4444 mirror.gcr.io/selenium/standalone-chromium:latest
+990c3960b9a1d48e57daaa999314656bdc344e1c5b36b93e27b0bf9139b4da82
+
+$ until curl -sf http://localhost:4444/status | jq -e .value.ready >/dev/null; do sleep 2; done; curl -s http://localhost:4444/status | jq -c '{ready:.value.ready}'
+{"ready":true}
+
+$ /home/samir/lab-tools/bin/python e2e/test_ui_selenium.py http://flag-on:5000 http://localhost:4444 evidence/screenshots
+PASS page title is 'Text Stats'
+PASS analyse shows '5 words, 2 unique, 20 characters'
+PASS top words shows 'ship (3), it (2)' with the flag on
+All browser checks passed
+
