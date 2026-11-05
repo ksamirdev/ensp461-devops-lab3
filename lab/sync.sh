@@ -1,9 +1,9 @@
 #!/bin/bash
-# macOS blocks OrbStack from reading ~/Desktop, so Docker runs from a copy in ~/lab3-run.
-# usage: lab/sync.sh to   - copy project to run dir
-#        lab/sync.sh back - copy evidence and lock file back to the repo
-REPO="$(cd "$(dirname "$0")/.." && pwd)"; RUN="$HOME/lab3-run"
+# Copies between this repo on the Mac and the lab machine (macOS keeps Desktop private from OrbStack).
+# usage: lab/sync.sh to | back
+M=ensp461-lab3; DIR='~/ensp461-lab3'
+cd "$(dirname "$0")/.."
 case "$1" in
-  to)   rsync -a --exclude .venv --exclude .git --exclude evidence --exclude reports "$REPO/" "$RUN/"; mkdir -p "$RUN/evidence" ;;
-  back) rsync -a "$RUN/evidence/" "$REPO/evidence/"; [ -f "$RUN/infra/.terraform.lock.hcl" ] && cp "$RUN/infra/.terraform.lock.hcl" "$REPO/infra/" ;;
+  to)   COPYFILE_DISABLE=1 tar c --exclude .venv --exclude .git --exclude reports --exclude evidence . | orb -m $M bash -c "mkdir -p $DIR && tar xf - -C $DIR --warning=no-unknown-keyword" ;;
+  back) orb -m $M bash -c "cd $DIR && tar c evidence \$(ls infra/.terraform.lock.hcl 2>/dev/null)" | tar xf - ;;
 esac
