@@ -1,0 +1,37 @@
+// DevSecOps gate: any stage failing blocks the build, so a vulnerable image never gets past it.
+pipeline {
+    agent any
+    options { disableConcurrentBuilds() }
+    triggers { pollSCM('H/2 * * * *') }
+
+    stages {
+        stage('Unit tests') {
+            steps {
+                sh 'python3 -m venv .venv'
+                sh '.venv/bin/pip install -q -r requirements-dev.txt pip-audit bandit'
+                sh '.venv/bin/python -m pytest -v --junitxml=test-results.xml'
+            }
+            post { always { junit 'test-results.xml' } }
+        }
+        stage('Dependency audit') {
+            steps { sh '.venv/bin/pip-audit -r requirements-dev.txt' }
+        }
+        stage('Static analysis') {
+            steps { sh '.venv/bin/bandit -r service -q' }
+        }
+        stage('Secrets and misconfiguration') {
+            steps { sh 'trivy fs --scanners secret,misconfig --severity HIGH,CRITICAL --exit-code 1 --skip-dirs .venv .' }
+        }
+        stage('Build image') {
+            steps { sh 'docker build -t text-stats:ci-${BUILD_NUMBER} .' }
+        }
+        stage('Image scan') {
+            steps { sh 'trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 text-stats:ci-${BUILD_NUMBER}' }
+        }
+    }
+
+    post {
+        success { echo "Build ${BUILD_NUMBER} passed every security gate" }
+        failure { echo "Build ${BUILD_NUMBER} BLOCKED by a security gate" }
+    }
+}
