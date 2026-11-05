@@ -1,0 +1,241 @@
+Started by an SCM change
+Checking out git https://github.com/ksamirdev/ensp461-devops-lab3.git into /var/jenkins_home/workspace/text-stats-devsecops@script/160a0c01552b9e534a24547809d9fc0ef2c623da0e2dc7b459c762e888aba03a to read pipeline/Jenkinsfile
+The recommended git tool is: NONE
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/text-stats-devsecops@script/160a0c01552b9e534a24547809d9fc0ef2c623da0e2dc7b459c762e888aba03a/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/ksamirdev/ensp461-devops-lab3.git # timeout=10
+Fetching upstream changes from https://github.com/ksamirdev/ensp461-devops-lab3.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+ > git fetch --tags --force --progress -- https://github.com/ksamirdev/ensp461-devops-lab3.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+Seen branch in repository origin/main
+Seen 1 remote branch
+ > git show-ref --tags -d # timeout=10
+Checking out Revision 7064c7e022dac9d95313137e01091e8705cb2528 (origin/main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 7064c7e022dac9d95313137e01091e8705cb2528 # timeout=10
+Commit message: "Remove pip from the runtime image to clear Trivy image findings"
+ > git rev-list --no-walk 8a039d2d56570a95b0b06dfbb553b376932f53ea # timeout=10
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in /var/jenkins_home/workspace/text-stats-devsecops
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+The recommended git tool is: NONE
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/text-stats-devsecops/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/ksamirdev/ensp461-devops-lab3.git # timeout=10
+Fetching upstream changes from https://github.com/ksamirdev/ensp461-devops-lab3.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+ > git fetch --tags --force --progress -- https://github.com/ksamirdev/ensp461-devops-lab3.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+Seen branch in repository origin/main
+Seen 1 remote branch
+ > git show-ref --tags -d # timeout=10
+Checking out Revision 7064c7e022dac9d95313137e01091e8705cb2528 (origin/main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 7064c7e022dac9d95313137e01091e8705cb2528 # timeout=10
+Commit message: "Remove pip from the runtime image to clear Trivy image findings"
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Unit tests)
+[Pipeline] sh
++ python3 -m venv .venv
+[Pipeline] sh
++ .venv/bin/pip install -q -r requirements-dev.txt pip-audit bandit
+[Pipeline] sh
++ .venv/bin/python -m pytest -v --junitxml=test-results.xml
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.2.0, pluggy-1.7.0 -- /var/jenkins_home/workspace/text-stats-devsecops/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /var/jenkins_home/workspace/text-stats-devsecops
+configfile: pytest.ini
+testpaths: tests
+plugins: platformdirs-4.14.5
+collecting ... collected 9 items
+
+tests/test_web.py::test_healthz_reports_healthy PASSED                   [ 11%]
+tests/test_web.py::test_text_stats_counts_unique_words_case_insensitively PASSED [ 22%]
+tests/test_web.py::test_stats_endpoint_returns_counts PASSED             [ 33%]
+tests/test_web.py::test_stats_endpoint_rejects_invalid_text[body0] PASSED [ 44%]
+tests/test_web.py::test_stats_endpoint_rejects_invalid_text[body1] PASSED [ 55%]
+tests/test_web.py::test_metrics_exposes_request_counter PASSED           [ 66%]
+tests/test_web.py::test_unknown_urls_share_one_metric_label PASSED       [ 77%]
+tests/test_web.py::test_top_words_hidden_when_flag_off PASSED            [ 88%]
+tests/test_web.py::test_top_words_served_when_flag_on PASSED             [100%]
+
+- generated xml file: /var/jenkins_home/workspace/text-stats-devsecops/test-results.xml -
+============================== 9 passed in 0.08s ===============================
+Post stage
+[Pipeline] junit
+Recording test results
+[Checks API] No suitable checks publisher found.
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Dependency audit)
+[Pipeline] sh
++ .venv/bin/pip-audit -r requirements-dev.txt
+No known vulnerabilities found
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Static analysis)
+[Pipeline] sh
++ .venv/bin/bandit -r service -q
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Secrets and misconfiguration)
+[Pipeline] sh
++ trivy fs --scanners secret,misconfig --severity HIGH,CRITICAL --ignorefile .trivyignore.yaml --exit-code 1 --skip-dirs .venv .
+2026-11-05T19:40:23Z	INFO	[misconfig] Misconfiguration scanning is enabled
+2026-11-05T19:40:23Z	INFO	[checks-client] Using existing checks from cache	path="/root/.cache/trivy/policy/content"
+2026-11-05T19:40:24Z	INFO	[secret] Secret scanning is enabled
+2026-11-05T19:40:24Z	INFO	[secret] If your scanning is slow, please try '--scanners misconfig' to disable secret scanning
+2026-11-05T19:40:24Z	INFO	[secret] Please see https://trivy.dev/docs/v0.76/guide/scanner/secret#recommendation for faster secret detection
+2026-11-05T19:40:24Z	INFO	[terraform scanner] Scanning root module	file_path="infra"
+2026-11-05T19:40:24Z	WARN	[pip] Unable to find python `site-packages` directory. License detection is skipped.	err="site-packages directory not found"
+2026-11-05T19:40:24Z	INFO	Number of language-specific files	num=1
+2026-11-05T19:40:24Z	INFO	Detected config files	num=4
+
+Report Summary
+
+┌─────────────────────┬────────────┬─────────┬───────────────────┐
+│       Target        │    Type    │ Secrets │ Misconfigurations │
+├─────────────────────┼────────────┼─────────┼───────────────────┤
+│ requirements.txt    │    pip     │    -    │         -         │
+├─────────────────────┼────────────┼─────────┼───────────────────┤
+│ Dockerfile          │ dockerfile │    -    │         0         │
+├─────────────────────┼────────────┼─────────┼───────────────────┤
+│ infra               │ terraform  │    -    │         0         │
+├─────────────────────┼────────────┼─────────┼───────────────────┤
+│ lab/node.Dockerfile │ dockerfile │    -    │         0         │
+├─────────────────────┼────────────┼─────────┼───────────────────┤
+│ pipeline/Dockerfile │ dockerfile │    -    │         0         │
+└─────────────────────┴────────────┴─────────┴───────────────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build image)
+[Pipeline] sh
++ docker build -t text-stats:ci-5 .
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 832B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for mirror.gcr.io/library/python:3.13-slim
+#2 DONE 0.5s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 124B done
+#3 DONE 0.0s
+
+#4 [1/6] FROM mirror.gcr.io/library/python:3.13-slim@sha256:09a17cad02668ae61ece136b4fd36ac3849e14f670ebedb637ea3e15580525bc
+#4 resolve mirror.gcr.io/library/python:3.13-slim@sha256:09a17cad02668ae61ece136b4fd36ac3849e14f670ebedb637ea3e15580525bc 0.0s done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 378B done
+#5 DONE 0.0s
+
+#6 [2/6] WORKDIR /srv/text-stats
+#6 CACHED
+
+#7 [3/6] COPY requirements.txt .
+#7 CACHED
+
+#8 [4/6] RUN pip install --no-cache-dir -r requirements.txt && pip uninstall -y pip
+#8 CACHED
+
+#9 [5/6] COPY service service
+#9 DONE 0.9s
+
+#10 [6/6] RUN useradd --system textstats && mkdir /var/log/text-stats && chown textstats /var/log/text-stats
+#10 DONE 0.4s
+
+#11 exporting to image
+#11 exporting layers 0.1s done
+#11 exporting manifest sha256:2fdf8096e8e27640b60eb6ef422186db2aced70c1a3b67fb86c0ce6d9876bb68 done
+#11 exporting config sha256:1dbc1cbc7825612bf87c419231ceb80a48311819b6b95b196a51487f6195fb33 done
+#11 exporting attestation manifest sha256:64f78eea0d02aafa8a1c3bfbe67aeddbe30103ecbc8bda220255aedf65a1421f done
+#11 exporting manifest list sha256:c701a2006fb99f604c41e7f04631bb227123772f7b23c57ec861369bdd5c7de5 done
+#11 naming to docker.io/library/text-stats:ci-5 done
+#11 unpacking to docker.io/library/text-stats:ci-5 0.0s done
+#11 DONE 0.1s
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Image scan)
+[Pipeline] sh
++ trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 text-stats:ci-5
+2026-11-05T19:40:27Z	INFO	[vuln] Vulnerability scanning is enabled
+2026-11-05T19:40:27Z	INFO	[secret] Secret scanning is enabled
+2026-11-05T19:40:27Z	INFO	[secret] If your scanning is slow, please try '--scanners vuln' to disable secret scanning
+2026-11-05T19:40:27Z	INFO	[secret] Please see https://trivy.dev/docs/v0.76/guide/scanner/secret#recommendation for faster secret detection
+2026-11-05T19:40:28Z	INFO	[python] Licenses acquired from one or more METADATA files may be subject to additional terms. Use `--debug` flag to see all affected packages.
+2026-11-05T19:40:28Z	INFO	Detected OS	family="debian" version="13.7"
+2026-11-05T19:40:28Z	INFO	[debian] Detecting vulnerabilities...	os_version="13" pkg_num=87
+2026-11-05T19:40:28Z	INFO	Number of language-specific files	num=1
+2026-11-05T19:40:28Z	INFO	[python-pkg] Detecting vulnerabilities...
+2026-11-05T19:40:28Z	WARN	Using severities from other vendors for some vulnerabilities. Read https://trivy.dev/docs/v0.76/guide/scanner/vulnerability#severity-selection for details.
+
+Report Summary
+
+┌──────────────────────────────────────────────────────────────────────────────────┬────────────┬─────────────────┬─────────┐
+│                                      Target                                      │    Type    │ Vulnerabilities │ Secrets │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ text-stats:ci-5 (debian 13.7)                                                    │   debian   │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ usr/local/lib/python3.13/site-packages/blinker-1.9.0.dist-info/METADATA          │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ usr/local/lib/python3.13/site-packages/click-8.5.0.dist-info/METADATA            │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ usr/local/lib/python3.13/site-packages/flask-3.1.3.dist-info/METADATA            │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ usr/local/lib/python3.13/site-packages/gunicorn-23.0.0.dist-info/METADATA        │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ usr/local/lib/python3.13/site-packages/itsdangerous-2.2.0.dist-info/METADATA     │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ usr/local/lib/python3.13/site-packages/jinja2-3.1.6.dist-info/METADATA           │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ usr/local/lib/python3.13/site-packages/markupsafe-3.0.4.dist-info/METADATA       │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ usr/local/lib/python3.13/site-packages/packaging-26.3.dist-info/METADATA         │ python-pkg │        0        │    -    │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ usr/local/lib/python3.13/site-packages/prometheus_client-0.22.1.dist-info/METAD- │ python-pkg │        0        │    -    │
+│ ATA                                                                              │            │                 │         │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┼─────────┤
+│ usr/local/lib/python3.13/site-packages/werkzeug-3.1.9.dist-info/METADATA         │ python-pkg │        0        │    -    │
+└──────────────────────────────────────────────────────────────────────────────────┴────────────┴─────────────────┴─────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] echo
+Build 5 passed every security gate
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+Finished: SUCCESS

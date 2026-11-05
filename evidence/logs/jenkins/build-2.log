@@ -1,0 +1,150 @@
+Started by user unknown or anonymous
+Checking out git https://github.com/ksamirdev/ensp461-devops-lab3.git into /var/jenkins_home/workspace/text-stats-devsecops@script/160a0c01552b9e534a24547809d9fc0ef2c623da0e2dc7b459c762e888aba03a to read pipeline/Jenkinsfile
+The recommended git tool is: NONE
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/text-stats-devsecops@script/160a0c01552b9e534a24547809d9fc0ef2c623da0e2dc7b459c762e888aba03a/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/ksamirdev/ensp461-devops-lab3.git # timeout=10
+Fetching upstream changes from https://github.com/ksamirdev/ensp461-devops-lab3.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+ > git fetch --tags --force --progress -- https://github.com/ksamirdev/ensp461-devops-lab3.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+Seen branch in repository origin/main
+Seen 1 remote branch
+ > git show-ref --tags -d # timeout=10
+Checking out Revision 2b3d7dfdba27ddb38635cd27d3ac6fd1277d8b26 (origin/main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 2b3d7dfdba27ddb38635cd27d3ac6fd1277d8b26 # timeout=10
+Commit message: "Add Jenkins DevSecOps pipeline: tests, pip-audit, bandit, trivy fs and image scan"
+ > git rev-list --no-walk 6a573814aef47141e42ce5342293e125090921e1 # timeout=10
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in /var/jenkins_home/workspace/text-stats-devsecops
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+The recommended git tool is: NONE
+No credentials specified
+Cloning the remote Git repository
+Cloning repository https://github.com/ksamirdev/ensp461-devops-lab3.git
+ > git init /var/jenkins_home/workspace/text-stats-devsecops # timeout=10
+Fetching upstream changes from https://github.com/ksamirdev/ensp461-devops-lab3.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+ > git fetch --tags --force --progress -- https://github.com/ksamirdev/ensp461-devops-lab3.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git config remote.origin.url https://github.com/ksamirdev/ensp461-devops-lab3.git # timeout=10
+ > git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
+Avoid second fetch
+Seen branch in repository origin/main
+Seen 1 remote branch
+ > git show-ref --tags -d # timeout=10
+Checking out Revision 2b3d7dfdba27ddb38635cd27d3ac6fd1277d8b26 (origin/main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 2b3d7dfdba27ddb38635cd27d3ac6fd1277d8b26 # timeout=10
+Commit message: "Add Jenkins DevSecOps pipeline: tests, pip-audit, bandit, trivy fs and image scan"
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Unit tests)
+[Pipeline] sh
++ python3 -m venv .venv
+[Pipeline] sh
++ .venv/bin/pip install -q -r requirements-dev.txt pip-audit bandit
+[Pipeline] sh
++ .venv/bin/python -m pytest -v --junitxml=test-results.xml
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.3.4, pluggy-1.7.0 -- /var/jenkins_home/workspace/text-stats-devsecops/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /var/jenkins_home/workspace/text-stats-devsecops
+configfile: pytest.ini
+testpaths: tests
+plugins: platformdirs-4.14.5
+collecting ... collected 9 items
+
+tests/test_web.py::test_healthz_reports_healthy PASSED                   [ 11%]
+tests/test_web.py::test_text_stats_counts_unique_words_case_insensitively PASSED [ 22%]
+tests/test_web.py::test_stats_endpoint_returns_counts PASSED             [ 33%]
+tests/test_web.py::test_stats_endpoint_rejects_invalid_text[body0] PASSED [ 44%]
+tests/test_web.py::test_stats_endpoint_rejects_invalid_text[body1] PASSED [ 55%]
+tests/test_web.py::test_metrics_exposes_request_counter PASSED           [ 66%]
+tests/test_web.py::test_unknown_urls_share_one_metric_label PASSED       [ 77%]
+tests/test_web.py::test_top_words_hidden_when_flag_off PASSED            [ 88%]
+tests/test_web.py::test_top_words_served_when_flag_on PASSED             [100%]
+
+- generated xml file: /var/jenkins_home/workspace/text-stats-devsecops/test-results.xml -
+============================== 9 passed in 0.09s ===============================
+Post stage
+[Pipeline] junit
+Recording test results
+[Checks API] No suitable checks publisher found.
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Dependency audit)
+[Pipeline] sh
++ .venv/bin/pip-audit -r requirements-dev.txt
+Found 20 known vulnerabilities in 3 packages
+Name    Version ID              Fix Versions
+------- ------- --------------- ------------
+flask   3.1.0   PYSEC-2026-1377 3.1.1
+flask   3.1.0   PYSEC-2026-2151 3.1.3
+flask   3.1.0   PYSEC-2026-1377 3.1.1
+flask   3.1.0   PYSEC-2026-2151 3.1.3
+pytest  8.3.4   PYSEC-2026-1845 9.0.3
+pytest  8.3.4   PYSEC-2026-1845 9.0.3
+urllib3 2.4.0   PYSEC-2026-1997 2.5.0
+urllib3 2.4.0   PYSEC-2026-1999 2.5.0
+urllib3 2.4.0   PYSEC-2026-1998 2.6.0
+urllib3 2.4.0   PYSEC-2026-1994 2.6.0
+urllib3 2.4.0   PYSEC-2026-1996 2.6.3
+urllib3 2.4.0   PYSEC-2026-141  2.7.0
+urllib3 2.4.0   PYSEC-2026-141  2.7.0
+urllib3 2.4.0   PYSEC-2026-1999 2.5.0
+urllib3 2.4.0   PYSEC-2026-1998 2.6.0
+urllib3 2.4.0   PYSEC-2026-1997 2.5.0
+urllib3 2.4.0   PYSEC-2026-1994 2.6.0
+urllib3 2.4.0   PYSEC-2026-1996 2.6.3
+urllib3 2.4.0   PYSEC-2026-4177 2.8.0
+urllib3 2.4.0   PYSEC-2026-4175 2.8.0
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Static analysis)
+Stage "Static analysis" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Secrets and misconfiguration)
+Stage "Secrets and misconfiguration" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build image)
+Stage "Build image" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Image scan)
+Stage "Image scan" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] echo
+Build 2 BLOCKED by a security gate
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+ERROR: script returned exit code 1
+Finished: FAILURE

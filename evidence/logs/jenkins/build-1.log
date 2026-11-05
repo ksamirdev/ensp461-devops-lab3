@@ -1,0 +1,24 @@
+Started by user unknown or anonymous
+Checking out git https://github.com/ksamirdev/ensp461-devops-lab3.git into /var/jenkins_home/workspace/text-stats-devsecops@script/160a0c01552b9e534a24547809d9fc0ef2c623da0e2dc7b459c762e888aba03a to read pipeline/Jenkinsfile
+The recommended git tool is: NONE
+No credentials specified
+Cloning the remote Git repository
+Cloning repository https://github.com/ksamirdev/ensp461-devops-lab3.git
+ > git init /var/jenkins_home/workspace/text-stats-devsecops@script/160a0c01552b9e534a24547809d9fc0ef2c623da0e2dc7b459c762e888aba03a # timeout=10
+Fetching upstream changes from https://github.com/ksamirdev/ensp461-devops-lab3.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+ > git fetch --tags --force --progress -- https://github.com/ksamirdev/ensp461-devops-lab3.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git config remote.origin.url https://github.com/ksamirdev/ensp461-devops-lab3.git # timeout=10
+ > git config --add remote.origin.fetch +refs/heads/*:refs/remotes/origin/* # timeout=10
+Avoid second fetch
+Seen branch in repository origin/main
+Seen 1 remote branch
+ > git show-ref --tags -d # timeout=10
+Checking out Revision 6a573814aef47141e42ce5342293e125090921e1 (origin/main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 6a573814aef47141e42ce5342293e125090921e1 # timeout=10
+Commit message: "Add feature flag, load test and Selenium evidence for Q6"
+First time build. Skipping changelog.
+ERROR: /var/jenkins_home/workspace/text-stats-devsecops@script/160a0c01552b9e534a24547809d9fc0ef2c623da0e2dc7b459c762e888aba03a/pipeline/Jenkinsfile not found
+Finished: FAILURE

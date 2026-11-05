@@ -1,0 +1,211 @@
+Started by an SCM change
+Checking out git https://github.com/ksamirdev/ensp461-devops-lab3.git into /var/jenkins_home/workspace/text-stats-devsecops@script/160a0c01552b9e534a24547809d9fc0ef2c623da0e2dc7b459c762e888aba03a to read pipeline/Jenkinsfile
+The recommended git tool is: NONE
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/text-stats-devsecops@script/160a0c01552b9e534a24547809d9fc0ef2c623da0e2dc7b459c762e888aba03a/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/ksamirdev/ensp461-devops-lab3.git # timeout=10
+Fetching upstream changes from https://github.com/ksamirdev/ensp461-devops-lab3.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+ > git fetch --tags --force --progress -- https://github.com/ksamirdev/ensp461-devops-lab3.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+Seen branch in repository origin/main
+Seen 1 remote branch
+ > git show-ref --tags -d # timeout=10
+Checking out Revision 9b358b930280d6b768ad6de16bba63ef2bf4bcfc (origin/main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 9b358b930280d6b768ad6de16bba63ef2bf4bcfc # timeout=10
+Commit message: "Bump flask, pytest and selenium to fix pip-audit findings"
+ > git rev-list --no-walk 2b3d7dfdba27ddb38635cd27d3ac6fd1277d8b26 # timeout=10
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in /var/jenkins_home/workspace/text-stats-devsecops
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Declarative: Checkout SCM)
+[Pipeline] checkout
+The recommended git tool is: NONE
+No credentials specified
+ > git rev-parse --resolve-git-dir /var/jenkins_home/workspace/text-stats-devsecops/.git # timeout=10
+Fetching changes from the remote Git repository
+ > git config remote.origin.url https://github.com/ksamirdev/ensp461-devops-lab3.git # timeout=10
+Fetching upstream changes from https://github.com/ksamirdev/ensp461-devops-lab3.git
+ > git --version # timeout=10
+ > git --version # 'git version 2.47.3'
+ > git fetch --tags --force --progress -- https://github.com/ksamirdev/ensp461-devops-lab3.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+Seen branch in repository origin/main
+Seen 1 remote branch
+ > git show-ref --tags -d # timeout=10
+Checking out Revision 9b358b930280d6b768ad6de16bba63ef2bf4bcfc (origin/main)
+ > git config core.sparsecheckout # timeout=10
+ > git checkout -f 9b358b930280d6b768ad6de16bba63ef2bf4bcfc # timeout=10
+Commit message: "Bump flask, pytest and selenium to fix pip-audit findings"
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Unit tests)
+[Pipeline] sh
++ python3 -m venv .venv
+[Pipeline] sh
++ .venv/bin/pip install -q -r requirements-dev.txt pip-audit bandit
+[Pipeline] sh
++ .venv/bin/python -m pytest -v --junitxml=test-results.xml
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-9.2.0, pluggy-1.7.0 -- /var/jenkins_home/workspace/text-stats-devsecops/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /var/jenkins_home/workspace/text-stats-devsecops
+configfile: pytest.ini
+testpaths: tests
+plugins: platformdirs-4.14.5
+collecting ... collected 9 items
+
+tests/test_web.py::test_healthz_reports_healthy PASSED                   [ 11%]
+tests/test_web.py::test_text_stats_counts_unique_words_case_insensitively PASSED [ 22%]
+tests/test_web.py::test_stats_endpoint_returns_counts PASSED             [ 33%]
+tests/test_web.py::test_stats_endpoint_rejects_invalid_text[body0] PASSED [ 44%]
+tests/test_web.py::test_stats_endpoint_rejects_invalid_text[body1] PASSED [ 55%]
+tests/test_web.py::test_metrics_exposes_request_counter PASSED           [ 66%]
+tests/test_web.py::test_unknown_urls_share_one_metric_label PASSED       [ 77%]
+tests/test_web.py::test_top_words_hidden_when_flag_off PASSED            [ 88%]
+tests/test_web.py::test_top_words_served_when_flag_on PASSED             [100%]
+
+- generated xml file: /var/jenkins_home/workspace/text-stats-devsecops/test-results.xml -
+============================== 9 passed in 0.10s ===============================
+Post stage
+[Pipeline] junit
+Recording test results
+[Checks API] No suitable checks publisher found.
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Dependency audit)
+[Pipeline] sh
++ .venv/bin/pip-audit -r requirements-dev.txt
+No known vulnerabilities found
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Static analysis)
+[Pipeline] sh
++ .venv/bin/bandit -r service -q
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Secrets and misconfiguration)
+[Pipeline] sh
++ trivy fs --scanners secret,misconfig --severity HIGH,CRITICAL --exit-code 1 --skip-dirs .venv .
+2026-11-05T19:30:57Z	INFO	[misconfig] Misconfiguration scanning is enabled
+2026-11-05T19:30:57Z	INFO	[checks-client] Need to update the checks bundle
+2026-11-05T19:30:57Z	INFO	[checks-client] Downloading the checks bundle...
+2026-11-05T19:31:00Z	INFO	[secret] If your scanning is slow, please try '--scanners misconfig' to disable secret scanning
+2026-11-05T19:31:00Z	INFO	[secret] Please see https://trivy.dev/docs/v0.76/guide/scanner/secret#recommendation for faster secret detection
+2026-11-05T19:31:00Z	INFO	[terraform scanner] Scanning root module	file_path="infra"
+2026-11-05T19:31:00Z	WARN	[pip] Unable to find python `site-packages` directory. License detection is skipped.	err="site-packages directory not found"
+2026-11-05T19:31:00Z	INFO	Number of language-specific files	num=1
+2026-11-05T19:31:00Z	INFO	Detected config files	num=4
+
+Report Summary
+
+┌─────────────────────┬────────────┬─────────┬───────────────────┐
+│       Target        │    Type    │ Secrets │ Misconfigurations │
+├─────────────────────┼────────────┼─────────┼───────────────────┤
+│ requirements.txt    │    pip     │    -    │         -         │
+├─────────────────────┼────────────┼─────────┼───────────────────┤
+│ Dockerfile          │ dockerfile │    -    │         0         │
+├─────────────────────┼────────────┼─────────┼───────────────────┤
+│ infra               │ terraform  │    -    │         0         │
+├─────────────────────┼────────────┼─────────┼───────────────────┤
+│ lab/node.Dockerfile │ dockerfile │    -    │         2         │
+├─────────────────────┼────────────┼─────────┼───────────────────┤
+│ pipeline/Dockerfile │ dockerfile │    -    │         2         │
+└─────────────────────┴────────────┴─────────┴───────────────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
+
+lab/node.Dockerfile (dockerfile)
+================================
+Tests: 20 (SUCCESSES: 18, FAILURES: 2)
+Failures: 2 (HIGH: 2, CRITICAL: 0)
+
+DS-0002 (HIGH): Specify at least 1 USER command in Dockerfile with non-root user as argument
+════════════════════════════════════════
+Running containers with 'root' user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a 'USER' statement to the Dockerfile.
+
+See https://avd.aquasec.com/misconfig/ds-0002
+────────────────────────────────────────
+
+
+DS-0029 (HIGH): '--no-install-recommends' flag is missed: 'apt-get update -qq && apt-get install -y -qq systemd systemd-sysv dbus'
+════════════════════════════════════════
+'apt-get' install should use '--no-install-recommends' to minimize image size.
+
+See https://avd.aquasec.com/misconfig/ds-0029
+────────────────────────────────────────
+ lab/node.Dockerfile:3
+────────────────────────────────────────
+   3 [ RUN apt-get update -qq && apt-get install -y -qq systemd systemd-sysv dbus
+────────────────────────────────────────
+
+
+
+pipeline/Dockerfile (dockerfile)
+================================
+Tests: 20 (SUCCESSES: 18, FAILURES: 2)
+Failures: 2 (HIGH: 2, CRITICAL: 0)
+
+DS-0002 (HIGH): Last USER command in Dockerfile should not be 'root'
+════════════════════════════════════════
+Running containers with 'root' user can lead to a container escape situation. It is a best practice to run containers as non-root users, which can be done by adding a 'USER' statement to the Dockerfile.
+
+See https://avd.aquasec.com/misconfig/ds-0002
+────────────────────────────────────────
+ pipeline/Dockerfile:4
+────────────────────────────────────────
+   4 [ USER root
+────────────────────────────────────────
+
+
+DS-0029 (HIGH): '--no-install-recommends' flag is missed: 'apt-get update -qq && apt-get install -y -qq python3-venv docker.io >/dev/null  && curl -fsSL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY}/trivy_${TRIVY}_Linux-ARM64.tar.gz" | tar xz -C /usr/local/bin trivy'
+════════════════════════════════════════
+'apt-get' install should use '--no-install-recommends' to minimize image size.
+
+See https://avd.aquasec.com/misconfig/ds-0029
+────────────────────────────────────────
+ pipeline/Dockerfile:5-6
+────────────────────────────────────────
+   5 ┌ RUN apt-get update -qq && apt-get install -y -qq python3-venv docker.io >/dev/null \
+   6 └  && curl -fsSL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY}/trivy_${TRIVY}_Linux-ARM64.tar.gz" | tar xz -C /usr/local/bin trivy
+────────────────────────────────────────
+
+
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build image)
+Stage "Build image" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Image scan)
+Stage "Image scan" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] echo
+Build 3 BLOCKED by a security gate
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+ERROR: script returned exit code 1
+Finished: FAILURE
