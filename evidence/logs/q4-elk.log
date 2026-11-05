@@ -1,0 +1,85 @@
+$ cat observability/logstash/pipeline.conf
+input {
+  file {
+    path => "/var/log/text-stats/app.log"
+    start_position => "beginning"
+    sincedb_path => "/dev/null"
+  }
+}
+
+filter {
+  grok {
+    match => {
+      "message" => "%{TIMESTAMP_ISO8601:logged_at} %{LOGLEVEL:level} %{WORD:logger} method=%{WORD:method} path=%{NOTSPACE:route} status=%{NUMBER:status:int} duration_ms=%{NUMBER:duration_ms:float}"
+    }
+  }
+  date {
+    match => ["logged_at", "yyyy-MM-dd HH:mm:ss,SSS"]
+    timezone => "UTC"
+    remove_field => ["logged_at"]
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => ["http://elasticsearch:9200"]
+    index => "text-stats-logs"
+  }
+}
+
+$ docker compose -f observability/compose.yml up -d elasticsearch logstash kibana 2>&1 | grep -E 'Started|Running|Healthy'
+ Container lab3-observability-elasticsearch-1 Started 
+ Container lab3-observability-elasticsearch-1 Healthy 
+ Container lab3-observability-logstash-1 Started 
+ Container lab3-observability-kibana-1 Started 
+
+$ until curl -sf http://localhost:9290/_cluster/health >/dev/null; do sleep 3; done; curl -s http://localhost:9290/_cluster/health | jq -c '{cluster_name,status,number_of_nodes}'
+{"cluster_name":"docker-cluster","status":"green","number_of_nodes":1}
+
+$ docker compose -f observability/compose.yml ps --format '{{.Service}}  {{.Status}}'
+app  Up 43 minutes (healthy)
+elasticsearch  Up 21 seconds (healthy)
+grafana  Up 43 minutes
+kibana  Up Less than a second
+logstash  Up Less than a second
+prometheus  Up 43 minutes
+
+$ docker compose -f observability/compose.yml exec -T app tail -3 /var/log/text-stats/app.log
+2026-11-05 19:59:23,022 WARNING textstats method=GET path=unmatched status=404 duration_ms=0.09
+2026-11-05 19:59:28,318 INFO textstats method=GET path=/healthz status=200 duration_ms=0.05
+2026-11-05 19:59:38,405 INFO textstats method=GET path=/healthz status=200 duration_ms=0.38
+
+$ curl -s http://localhost:9290/_cat/indices/text-stats-logs?v
+health status index           uuid                   pri rep docs.count docs.deleted store.size pri.store.size dataset.size
+yellow open   text-stats-logs hrCh5MfWSFSsmI7-tj_W-A   1   1      86072            0       10mb           10mb         10mb
+
+$ curl -s 'http://localhost:9290/text-stats-logs/_search?size=1&sort=@timestamp:desc' | jq '.hits.hits[0]._source | {"@timestamp",level,logger,method,route,status,duration_ms}'
+{
+  "@timestamp": "2026-11-05T19:59:38.405Z",
+  "level": "INFO",
+  "logger": "textstats",
+  "method": "GET",
+  "route": "/healthz",
+  "status": 200,
+  "duration_ms": 0.38
+}
+
+$ curl -s 'http://localhost:9290/text-stats-logs/_count?q=tags:_grokparsefailure' | jq -c '{parse_failures:.count}'
+{"parse_failures":0}
+
+$ curl -s http://localhost:9290/text-stats-logs/_search -H 'Content-Type: application/json' -d '{"size":0,"aggs":{"levels":{"terms":{"field":"level.keyword"}},"routes":{"terms":{"field":"route.keyword"}}}}' | jq -c '.aggregations | {levels:[.levels.buckets[]|{(.key):.doc_count}],routes:[.routes.buckets[]|{(.key):.doc_count}]}'
+{"levels":[{"INFO":77563},{"WARNING":8632}],"routes":[{"/healthz":54614},{"/stats":18632},{"/":4317},{"/ui":4316},{"unmatched":4316}]}
+
+$ until curl -s http://localhost:5690/api/status | jq -e '.status.overall.level=="available"' >/dev/null; do sleep 5; done; curl -s http://localhost:5690/api/status | jq -c '{version:.version.number,status:.status.overall.level}'
+{"version":null,"status":"available"}
+
+$ curl -s -X POST http://localhost:5690/api/data_views/data_view -H 'kbn-xsrf: true' -H 'Content-Type: application/json' -d '{"data_view":{"id":"text-stats","title":"text-stats-logs","name":"Text Stats Logs","timeFieldName":"@timestamp"}}' | jq -c '.data_view | {id,title,timeFieldName}'
+{"id":"text-stats","title":"text-stats-logs","timeFieldName":"@timestamp"}
+
+$ docker compose -f observability/compose.yml exec -T app wc -l /var/log/text-stats/app.log; curl -s localhost:9290/text-stats-logs/_count | jq -c '{indexed_docs:.count}'
+86198 /var/log/text-stats/app.log
+{"indexed_docs":86198}
+
+$ curl -s localhost:9290/_cluster/health | jq -c '{status,unassigned_shards}'
+{"status":"yellow","unassigned_shards":1}
+
